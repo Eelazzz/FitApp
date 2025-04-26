@@ -16,7 +16,7 @@
   </div>
 
   <script type="module">
-    import { BrowserMultiFormatReader, BarcodeFormat } from 'https://cdn.jsdelivr.net/npm/@zxing/browser@0.0.10/+esm';
+    import { BrowserMultiFormatReader } from 'https://cdn.jsdelivr.net/npm/@zxing/browser@0.0.10/+esm';
 
     const scanButton = document.getElementById('scanButton');
     const eanResult = document.getElementById('eanResult');
@@ -26,24 +26,27 @@
 
     scanButton.addEventListener('click', async () => {
       video.style.display = 'block'; // Показать видео
-      
+
       try {
-        await codeReader.decodeFromVideoDevice(null, video, (result, err, controls) => {
+        const controls = await codeReader.decodeFromVideoDevice(null, video, (result, error, controls) => {
           if (result) {
-            // Проверяем, что это EAN-код
-            if (result.getBarcodeFormat() === BarcodeFormat.EAN_13 || result.getBarcodeFormat() === BarcodeFormat.EAN_8) {
-              console.log('EAN код:', result.getText());
-              eanResult.value = result.getText(); // Записываем в поле
-              controls.stop(); // Останавливаем камеру
+            const text = result.getText();
+            const format = result.getBarcodeFormat();
+
+            console.log('Распознан код:', text, 'Формат:', format);
+
+            // Проверяем формат
+            if (format.includes('EAN_13') || format.includes('EAN_8')) {
+              eanResult.value = text;
+              controls.stop(); // Останавливаем только если это EAN
               video.style.display = 'none'; // Скрываем видео
             }
           }
-          if (err && !(err instanceof ZXing.NotFoundException)) {
-            console.error(err);
-          }
+          // Ошибки ловить необязательно — сканирование продолжается
         });
+
       } catch (error) {
-        console.error('Ошибка при сканировании:', error);
+        console.error('Ошибка при запуске сканера:', error);
       }
     });
   </script>
