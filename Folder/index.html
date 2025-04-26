@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Food Recognition with MobileNet</title>
+  <!-- Подключаем TensorFlow.js и модель MobileNet -->
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/mobilenet"></script>
+</head>
+<body>
+  <h1>Тестово поменяли название_____ </h1>
+  
+  <!-- Элемент для загрузки изображения -->
+  <input type="file" id="imageInput" accept="image/*">
+  <br><br>
+  
+  <!-- Кнопка для запуска классификации -->
+  <button onclick="classifyImage()">Classify Image</button>
+  
+  <br><br>
+  <p>Prediction: </p>
+  <p id="prediction"></p>
+
+  <br>
+  <img id="uploadedImage" src="" alt="Uploaded Image" style="max-width: 300px;">
+  
+  <script>
+    // Функция для классификации изображения
+    async function classifyImage() {
+      const fileInput = document.getElementById('imageInput');
+      const uploadedImage = document.getElementById('uploadedImage');
+      const predictionElement = document.getElementById('prediction');
+      
+      // Проверяем, есть ли файл
+      if (fileInput.files.length === 0) {
+        alert("Please upload an image.");
+        return;
+      }
+
+      // Загружаем выбранное изображение
+      const img = new Image();
+      img.src = URL.createObjectURL(fileInput.files[0]);
+      
+      img.onload = async () => {
+        // Показываем загруженное изображение на странице
+        uploadedImage.src = img.src;
+
+        // Загружаем модель MobileNet
+        const model = await mobilenet.load();
+        
+        // Преобразуем изображение в tensor для работы с TensorFlow.js
+        const tensor = tf.browser.fromPixels(img);
+
+        // Классифицируем изображение
+        const predictions = await model.classify(tensor);
+
+        // Выводим результаты классификации
+        const result = predictions.map(p => `${p.className}: ${Math.round(p.probability * 100)}%`).join('<br>');
+        predictionElement.innerHTML = result;
+      };
+    }
+  </script>
+</body>
+</html>
