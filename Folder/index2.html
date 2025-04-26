@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Сканер штрих-кода</title>
+</head>
+<body>
+  <h1>Сканер штрих-кода</h1>
+  <video id="video" width="300" height="200" style="border:1px solid black"></video>
+  <div id="result" style="margin-top:20px; font-size:20px; color:green;"></div>
+
+  <script type="module">
+    import { BrowserMultiFormatReader } from 'https://cdn.jsdelivr.net/npm/@zxing/browser@0.0.10/+esm';
+
+    const video = document.getElementById('video');
+    const resultDiv = document.getElementById('result');
+
+    const codeReader = new BrowserMultiFormatReader();
+
+    codeReader.decodeFromVideoDevice(null, video, (result, err, controls) => {
+      if (result) {
+        console.log(result.getText());  // Выводим номер в консоль
+        resultDiv.innerText = 'Штрих-код: ' + result.getText();
+        controls.stop();                // Остановить камеру
+      }
+      if (err && !(err instanceof ZXing.NotFoundException)) {
+        console.error(err);
+      }
+    });
+  </script>
+</body>
+</html>
