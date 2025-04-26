@@ -2,29 +2,48 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Сканер штрих-кода</title>
+  <title>Сканирование EAN-кода</title>
 </head>
 <body>
-  <h1>Сканер штрих-кода</h1>
-  <video id="video" width="300" height="200" style="border:1px solid black"></video>
-  <div id="result" style="margin-top:20px; font-size:20px; color:green;"></div>
+  <h1>Сканировать штрих-код (EAN)</h1>
+
+  <input type="text" id="eanResult" placeholder="Здесь появится EAN код" style="width:300px; height:30px; font-size:16px;">
+  <br><br>
+  <button id="scanButton" style="padding:10px 20px; font-size:16px;">Сканировать</button>
+
+  <div style="margin-top:20px;">
+    <video id="video" width="300" height="200" style="border:1px solid black; display:none;"></video>
+  </div>
 
   <script type="module">
-    import { BrowserMultiFormatReader } from 'https://cdn.jsdelivr.net/npm/@zxing/browser@0.0.10/+esm';
+    import { BrowserMultiFormatReader, BarcodeFormat } from 'https://cdn.jsdelivr.net/npm/@zxing/browser@0.0.10/+esm';
 
+    const scanButton = document.getElementById('scanButton');
+    const eanResult = document.getElementById('eanResult');
     const video = document.getElementById('video');
-    const resultDiv = document.getElementById('result');
 
     const codeReader = new BrowserMultiFormatReader();
 
-    codeReader.decodeFromVideoDevice(null, video, (result, err, controls) => {
-      if (result) {
-        console.log(result.getText());  // Выводим номер в консоль
-        resultDiv.innerText = 'Штрих-код: ' + result.getText();
-        controls.stop();                // Остановить камеру
-      }
-      if (err && !(err instanceof ZXing.NotFoundException)) {
-        console.error(err);
+    scanButton.addEventListener('click', async () => {
+      video.style.display = 'block'; // Показать видео
+      
+      try {
+        await codeReader.decodeFromVideoDevice(null, video, (result, err, controls) => {
+          if (result) {
+            // Проверяем, что это EAN-код
+            if (result.getBarcodeFormat() === BarcodeFormat.EAN_13 || result.getBarcodeFormat() === BarcodeFormat.EAN_8) {
+              console.log('EAN код:', result.getText());
+              eanResult.value = result.getText(); // Записываем в поле
+              controls.stop(); // Останавливаем камеру
+              video.style.display = 'none'; // Скрываем видео
+            }
+          }
+          if (err && !(err instanceof ZXing.NotFoundException)) {
+            console.error(err);
+          }
+        });
+      } catch (error) {
+        console.error('Ошибка при сканировании:', error);
       }
     });
   </script>
