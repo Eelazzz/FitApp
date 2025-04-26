@@ -2,10 +2,10 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Сканирование EAN-кода</title>
+  <title>EAN сканирование</title>
 </head>
 <body>
-  <h1>Сканировать штрих-код (EAN)</h1>
+  <h1>Сканировать штрих-код 1(EAN)</h1>
 
   <input type="text" id="eanResult" placeholder="Здесь появится EAN код" style="width:300px; height:30px; font-size:16px;">
   <br><br>
@@ -16,37 +16,46 @@
   </div>
 
   <script type="module">
-    import { BrowserMultiFormatReader } from 'https://cdn.jsdelivr.net/npm/@zxing/browser@0.0.10/+esm';
+    import { BrowserMultiFormatReader, BarcodeFormat, DecodeHintType } from 'https://cdn.jsdelivr.net/npm/@zxing/browser@0.0.10/+esm';
 
     const scanButton = document.getElementById('scanButton');
     const eanResult = document.getElementById('eanResult');
     const video = document.getElementById('video');
 
-    const codeReader = new BrowserMultiFormatReader();
+    const hints = new Map();
+    hints.set(DecodeHintType.POSSIBLE_FORMATS, [BarcodeFormat.EAN_13, BarcodeFormat.EAN_8]);
+
+    const codeReader = new BrowserMultiFormatReader(hints);
 
     scanButton.addEventListener('click', async () => {
       video.style.display = 'block'; // Показать видео
 
       try {
-        const controls = await codeReader.decodeFromVideoDevice(null, video, (result, error, controls) => {
+        const constraints = {
+          video: {
+            facingMode: 'environment',
+            width: { ideal: 1280 },
+            height: { ideal: 720 }
+          }
+        };
+
+        const controls = await codeReader.decodeFromConstraints(constraints, video, (result, error, controls) => {
           if (result) {
             const text = result.getText();
             const format = result.getBarcodeFormat();
 
-            console.log('Распознан код:', text, 'Формат:', format);
+            console.log('Найден код:', text, 'Формат:', format);
 
-            // Проверяем формат
-            if (format.includes('EAN_13') || format.includes('EAN_8')) {
+            if (format.includes('EAN')) {
               eanResult.value = text;
-              controls.stop(); // Останавливаем только если это EAN
-              video.style.display = 'none'; // Скрываем видео
+              controls.stop(); // Остановить сканирование
+              video.style.display = 'none'; // Скрыть видео
             }
           }
-          // Ошибки ловить необязательно — сканирование продолжается
         });
 
       } catch (error) {
-        console.error('Ошибка при запуске сканера:', error);
+        console.error('Ошибка запуска сканера:', error);
       }
     });
   </script>
